@@ -1,4 +1,3 @@
-
 import os
 import json
 import re
@@ -282,85 +281,260 @@ def build_dashboard(result):
         "No prevention recommendations provided"
     )
 
+
+    # Convert lists into attractive dashboard items
+
+    if isinstance(indicators, list):
+        indicator_html = "".join(
+            f'<span class="indicator">⚠️ {item}</span>'
+            for item in indicators
+        )
+    else:
+        indicator_html = (
+            f'<span class="indicator">⚠️ {indicators}</span>'
+        )
+
+
+    if isinstance(immediate_actions, list):
+        immediate_html = "".join(
+            f'<div class="action">🛡️ {item}</div>'
+            for item in immediate_actions
+        )
+    else:
+        immediate_html = (
+            f'<div class="action">🛡️ {immediate_actions}</div>'
+        )
+
+
+    if isinstance(investigation, list):
+        investigation_html = "".join(
+            f'<div class="action">🔍 {item}</div>'
+            for item in investigation
+        )
+    else:
+        investigation_html = (
+            f'<div class="action">🔍 {investigation}</div>'
+        )
+
+
+    if isinstance(recommendations, list):
+        recommendation_html = "".join(
+            f'<div class="action">🚀 {item}</div>'
+            for item in recommendations
+        )
+    else:
+        recommendation_html = (
+            f'<div class="action">🚀 {recommendations}</div>'
+        )
+
+
+    if isinstance(prevention, list):
+        prevention_html = "".join(
+            f'<div class="action">🛡️ {item}</div>'
+            for item in prevention
+        )
+    else:
+        prevention_html = (
+            f'<div class="action">🛡️ {prevention}</div>'
+        )
+
+
     return f"""
+
 <div class="dashboard">
 
-<h1>🛡️ SentinelSOC AI</h1>
+    <!-- HEADER -->
 
-<p class="subtitle">
-AI-Powered Security Operations Center Assistant
-</p>
+    <div class="dashboard-header">
 
-<div class="cards">
+        <div class="brand">
+            🛡️
+            <span>SENTINELSOC AI</span>
+        </div>
 
-<div class="card">
-<h3>🚨 Threat</h3>
-<p>{threat_type}</p>
+        <div class="subtitle">
+            AI-POWERED SECURITY OPERATIONS CENTER
+        </div>
+
+        <div class="status">
+
+            <span class="online-dot"></span>
+            SYSTEM ONLINE
+
+            <span class="separator">•</span>
+
+            🤖 3 AGENTS ACTIVE
+
+            <span class="separator">•</span>
+
+            🔐 SECURE ANALYSIS
+
+        </div>
+
+    </div>
+
+
+    <!-- TOP CARDS -->
+
+    <div class="top-grid">
+
+        <div class="soc-card">
+
+            <div class="card-title">
+                🔍 THREAT DETECTED
+            </div>
+
+            <div class="big-value">
+                {threat_type}
+            </div>
+
+            <div class="small-text">
+                🎯 {technique}
+            </div>
+
+        </div>
+
+
+        <div class="soc-card">
+
+            <div class="card-title">
+                ⚠️ RISK LEVEL
+            </div>
+
+            <div class="risk-value">
+                {risk_level}
+            </div>
+
+            <div class="score">
+                {risk_score}/100
+            </div>
+
+        </div>
+
+
+        <div class="soc-card">
+
+            <div class="card-title">
+                🤖 AI CONFIDENCE
+            </div>
+
+            <div class="confidence">
+                {confidence}%
+            </div>
+
+            <div class="small-text">
+                Analysis confidence
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- INDICATORS -->
+
+    <div class="soc-card">
+
+        <div class="card-title">
+            📌 INDICATORS
+        </div>
+
+        <div class="indicators">
+            {indicator_html}
+        </div>
+
+    </div>
+
+
+    <!-- EVIDENCE + IMPACT -->
+
+    <div class="middle-grid">
+
+        <div class="soc-card">
+
+            <div class="card-title">
+                🧠 EVIDENCE
+            </div>
+
+            <div class="content">
+                {evidence}
+            </div>
+
+        </div>
+
+
+        <div class="soc-card">
+
+            <div class="card-title">
+                💥 IMPACT
+            </div>
+
+            <div class="content">
+                {impact}
+            </div>
+
+            <div class="small-text">
+                ⏱️ {urgency}
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- IMMEDIATE ACTIONS -->
+
+    <div class="soc-card">
+
+        <div class="card-title">
+            🛡️ RECOMMENDED ACTIONS
+        </div>
+
+        {immediate_html}
+
+    </div>
+
+
+    <!-- INVESTIGATION -->
+
+    <div class="soc-card">
+
+        <div class="card-title">
+            🔍 INVESTIGATION
+        </div>
+
+        {investigation_html}
+
+    </div>
+
+
+    <!-- RECOMMENDED RESPONSE -->
+
+    <div class="soc-card">
+
+        <div class="card-title">
+            🚀 RECOMMENDED RESPONSE
+        </div>
+
+        {recommendation_html}
+
+    </div>
+
+
+    <!-- PREVENTION -->
+
+    <div class="soc-card">
+
+        <div class="card-title">
+            🛡️ PREVENTION
+        </div>
+
+        {prevention_html}
+
+    </div>
+
 </div>
 
-<div class="card">
-<h3>🎯 Technique</h3>
-<p>{technique}</p>
-</div>
-
-<div class="card">
-<h3>⚠️ Risk</h3>
-<p>{risk_level}</p>
-</div>
-
-<div class="card">
-<h3>📊 Risk Score</h3>
-<p>{risk_score}/100</p>
-</div>
-
-<div class="card">
-<h3>🔎 Confidence</h3>
-<p>{confidence}</p>
-</div>
-
-<div class="card">
-<h3>🔥 Severity</h3>
-<p>{severity}</p>
-</div>
-
-</div>
-
-<div class="section">
-<h2>🔎 Indicators of Compromise</h2>
-<p>{indicators}</p>
-</div>
-
-<div class="section">
-<h2>📌 Evidence</h2>
-<p>{evidence}</p>
-</div>
-
-<div class="section">
-<h2>💥 Possible Impact</h2>
-<p>{impact}</p>
-</div>
-
-<div class="section">
-<h2>🚀 Immediate Actions</h2>
-<p>{immediate_actions}</p>
-</div>
-
-<div class="section">
-<h2>🕵️ Investigation</h2>
-<p>{investigation}</p>
-</div>
-
-<div class="section">
-<h2>🛠️ Recommended Response</h2>
-<p>{recommendations}</p>
-</div>
-
-<div class="section">
-<h2>🛡️ Prevention</h2>
-<p>{prevention}</p>
-</div>
-
-</div>
 """
 
 
@@ -372,12 +546,12 @@ def run_analysis(alert):
 
     if not alert or not alert.strip():
 
-        return (
-            "<div style='padding:20px;'>"
-            "⚠️ Please enter a security alert "
-            "or suspicious activity."
-            "</div>"
-        )
+        return """
+        <div class="error-box">
+            🚨 Please enter a security alert
+            or suspicious activity.
+        </div>
+        """
 
     try:
 
@@ -388,58 +562,409 @@ def run_analysis(alert):
     except Exception as e:
 
         return f"""
-        <div style="padding:20px;">
-        ❌ Error: {str(e)}
+        <div class="error-box">
+            ❌ Error: {str(e)}
         </div>
         """
 
 
 # ==========================================
-# DASHBOARD CSS
+# PROFESSIONAL DASHBOARD CSS
 # ==========================================
 
 dashboard_css = """
 
-.dashboard {
-    padding: 20px;
+/* ==========================================
+   MAIN APPLICATION
+   ========================================== */
+
+body {
+    background: #070711 !important;
 }
 
-.dashboard h1 {
-    font-size: 32px;
-    margin-bottom: 5px;
+.gradio-container {
+    max-width: 1400px !important;
+    margin: auto !important;
+    background: #070711 !important;
 }
+
+
+/* ==========================================
+   DASHBOARD
+   ========================================== */
+
+.dashboard {
+
+    font-family: Arial, sans-serif;
+
+    padding: 10px;
+
+    color: #eeeeF5;
+
+}
+
+
+/* ==========================================
+   HEADER
+   ========================================== */
+
+.dashboard-header {
+
+    padding: 10px 0 20px 0;
+
+}
+
+
+.brand {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    font-size: 42px;
+
+    font-weight: 800;
+
+    letter-spacing: 2px;
+
+    color: #f5f5fa;
+
+}
+
+
+.brand:first-letter {
+
+    font-size: 45px;
+
+}
+
 
 .subtitle {
-    opacity: 0.7;
-    margin-bottom: 25px;
+
+    margin-top: 10px;
+
+    font-size: 16px;
+
+    font-weight: 700;
+
+    color: #ffffff;
+
+    letter-spacing: 0.5px;
+
 }
 
-.cards {
+
+.status {
+
+    margin-top: 28px;
+
+    font-size: 14px;
+
+    color: #eeeeF5;
+
+}
+
+
+.online-dot {
+
+    display: inline-block;
+
+    width: 16px;
+
+    height: 16px;
+
+    background: #35e88a;
+
+    border-radius: 50%;
+
+    margin-right: 7px;
+
+    box-shadow: 0 0 12px rgba(53,232,138,0.7);
+
+}
+
+
+.separator {
+
+    margin: 0 12px;
+
+    color: #ffffff;
+
+}
+
+
+/* ==========================================
+   TOP CARDS
+   ========================================== */
+
+.top-grid {
+
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
-    margin: 20px 0;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 16px;
+
+    margin-top: 18px;
+
+    margin-bottom: 16px;
+
 }
 
-.card {
-    padding: 18px;
-    border-radius: 12px;
-    border: 1px solid #333;
+
+/* ==========================================
+   SOC CARD
+   ========================================== */
+
+.soc-card {
+
+    background:
+        linear-gradient(
+            145deg,
+            #111122,
+            #0a0a16
+        );
+
+    border: 1px solid #29294a;
+
+    border-radius: 18px;
+
+    padding: 22px;
+
+    margin-bottom: 16px;
+
+    box-shadow:
+        0 8px 30px
+        rgba(0,0,0,0.35);
+
+    transition: 0.2s;
+
 }
 
-.card h3 {
-    margin-bottom: 8px;
+
+.soc-card:hover {
+
+    border-color: #6c5ce7;
+
+    box-shadow:
+        0 0 22px
+        rgba(108,92,231,0.25);
+
 }
 
-.section {
-    padding: 18px;
-    margin-top: 15px;
-    border-radius: 12px;
-    border: 1px solid #333;
+
+/* ==========================================
+   CARD TITLES
+   ========================================== */
+
+.card-title {
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.5px;
+
+    color: #aaaac5;
+
+    margin-bottom: 12px;
+
 }
 
-.section h2 {
-    margin-bottom: 10px;
+
+/* ==========================================
+   CARD VALUES
+   ========================================== */
+
+.big-value {
+
+    font-size: 28px;
+
+    font-weight: 800;
+
+    color: #ffffff;
+
+}
+
+
+.risk-value {
+
+    font-size: 30px;
+
+    font-weight: 800;
+
+    color: #ff4d6d;
+
+}
+
+
+.score {
+
+    font-size: 20px;
+
+    font-weight: 700;
+
+    margin-top: 6px;
+
+    color: #b8a7ff;
+
+}
+
+
+.confidence {
+
+    font-size: 28px;
+
+    font-weight: 800;
+
+    color: #b8a7ff;
+
+}
+
+
+.small-text {
+
+    color: #9696ad;
+
+    margin-top: 8px;
+
+    font-size: 14px;
+
+}
+
+
+/* ==========================================
+   INDICATORS
+   ========================================== */
+
+.indicators {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+}
+
+
+.indicator {
+
+    background: #19192c;
+
+    border: 1px solid #343452;
+
+    border-radius: 10px;
+
+    padding: 8px 12px;
+
+    color: #d8d8ea;
+
+    font-size: 13px;
+
+}
+
+
+/* ==========================================
+   MIDDLE SECTION
+   ========================================== */
+
+.middle-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        2fr 1fr;
+
+    gap: 16px;
+
+}
+
+
+/* ==========================================
+   CONTENT
+   ========================================== */
+
+.content {
+
+    color: #eeeeF5;
+
+    font-size: 15px;
+
+    line-height: 1.6;
+
+}
+
+
+/* ==========================================
+   ACTIONS
+   ========================================== */
+
+.action {
+
+    background: #151527;
+
+    border-left: 3px solid #6c5ce7;
+
+    border-radius: 8px;
+
+    padding: 10px 12px;
+
+    margin-top: 8px;
+
+    color: #eeeeF5;
+
+    font-size: 14px;
+
+}
+
+
+/* ==========================================
+   ERROR
+   ========================================== */
+
+.error-box {
+
+    background: #111122;
+
+    border: 1px solid #ff4d6d;
+
+    border-radius: 14px;
+
+    padding: 20px;
+
+    color: #ffffff;
+
+}
+
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 900px) {
+
+    .top-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .middle-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+    .brand {
+
+        font-size: 32px;
+
+    }
+
 }
 
 """
@@ -450,40 +975,79 @@ dashboard_css = """
 # ==========================================
 
 with gr.Blocks(
-    title="SentinelSOC AI"
+    title="SentinelSOC AI",
+    css=dashboard_css
 ) as app:
+
+
+    # ======================================
+    # APPLICATION HEADER
+    # ======================================
 
     gr.Markdown(
         """
-# 🛡️ SentinelSOC AI
+# 🛡️ SENTINELSOC AI
 
-### AI-Powered Security Operations Center Assistant
+**AI-POWERED SECURITY OPERATIONS CENTER**
 
-Analyze suspicious security alerts and receive AI-powered
-threat analysis, risk assessment, and defensive response.
+🟢 SYSTEM ONLINE &nbsp;&nbsp; • &nbsp;&nbsp;
+🤖 3 AGENTS ACTIVE &nbsp;&nbsp; • &nbsp;&nbsp;
+🔐 SECURE ANALYSIS
 """
     )
 
-    alert_input = gr.Textbox(
-        label="Security Alert / Suspicious Activity",
-        placeholder=(
-            "Paste a security alert, log, suspicious "
-            "message, or activity here..."
-        ),
-        lines=8
+
+    # ======================================
+    # SECURITY ALERT INPUT
+    # ======================================
+
+    gr.Markdown(
+        "## 🚨 NEW SECURITY ALERT"
     )
 
-    analyze_button = gr.Button(
-        "🔍 Analyze Threat",
-        variant="primary"
+
+    alert_input = gr.Textbox(
+
+        placeholder=(
+            "Paste suspicious activity, "
+            "security alert, or log here..."
+        ),
+
+        lines=7,
+
+        show_label=False
+
     )
+
+
+    # ======================================
+    # ANALYZE BUTTON
+    # ======================================
+
+    analyze_button = gr.Button(
+
+        "🔍 ANALYZE THREAT",
+
+        variant="primary"
+
+    )
+
+
+    # ======================================
+    # OUTPUT
+    # ======================================
 
     output = gr.HTML()
 
+
     analyze_button.click(
+
         fn=run_analysis,
+
         inputs=alert_input,
+
         outputs=output
+
     )
 
 
@@ -501,7 +1065,10 @@ if __name__ == "__main__":
     )
 
     app.launch(
+
         server_name="0.0.0.0",
-        server_port=port,
-        css=dashboard_css
+
+        server_port=port
+
     )
+
