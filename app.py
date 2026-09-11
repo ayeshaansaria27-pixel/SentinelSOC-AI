@@ -11,15 +11,21 @@ from groq import Groq
 
 MODEL = "openai/gpt-oss-120b"
 
-# Get API key
+
+# ==========================================
+# GET API KEY
+# ==========================================
+
 try:
     from google.colab import userdata
     GROQ_API_KEY = userdata.get("GROQ_API_KEY")
 except Exception:
     GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
+
 if not GROQ_API_KEY:
     raise ValueError("GROQ_API_KEY was not found.")
+
 
 client = Groq(api_key=GROQ_API_KEY)
 
@@ -118,15 +124,32 @@ Threat Analysis:
 Risk Assessment:
 {risk_assessment}
 
-Provide:
-- Immediate defensive actions
-- Investigation steps
-- Recommended response
-- Prevention recommendations
+Create a SHORT SOC response.
 
-Keep the response practical for a SOC analyst.
+IMPORTANT:
+- Do NOT write explanations or paragraphs.
+- Do NOT use sub-bullets.
+- Do NOT use numbering.
+- Each item must be ONE short sentence.
+- Keep every item concise and practical.
 
-Return the result in JSON format.
+Return ONLY these JSON fields:
+
+"immediate_defensive_actions":
+Exactly 4 short items.
+Each item should be one short sentence.
+
+"investigation_steps":
+Exactly 3 short items.
+Each item should be one short sentence.
+
+"prevention_recommendations":
+Exactly 4 short items.
+Each item should be one short sentence.
+
+Do NOT include "recommended_response".
+
+Return valid JSON only.
 """
 
     return ask_ai(prompt)
@@ -204,12 +227,83 @@ def prepare_dashboard_data(result):
 
 
 # ==========================================
+# SHORT RESPONSE ITEMS
+# ==========================================
+
+def clean_short_item(item):
+
+    item = str(item)
+
+    # Remove markdown
+    item = re.sub(r"\*\*(.*?)\*\*", r"\1", item)
+    item = re.sub(r"__(.*?)__", r"\1", item)
+    item = re.sub(r"`(.*?)`", r"\1", item)
+
+    # Remove numbering
+    item = re.sub(
+        r"^\s*\d+[\.\)\-:]\s*",
+        "",
+        item
+    )
+
+    # Remove bullets
+    item = re.sub(
+        r"^\s*[-*•]\s*",
+        "",
+        item
+    )
+
+    # Remove unnecessary spaces
+    item = re.sub(
+        r"\s+",
+        " ",
+        item
+    ).strip()
+
+    return item
+
+
+def get_short_items(value, limit):
+
+    if isinstance(value, list):
+
+        items = value
+
+    else:
+
+        text = str(value)
+
+        # If AI returns multiple lines in one string
+        items = re.split(
+            r"\n+",
+            text
+        )
+
+    cleaned = []
+
+    for item in items:
+
+        item = clean_short_item(item)
+
+        if item:
+            cleaned.append(item)
+
+    return cleaned[:limit]
+
+
+# ==========================================
 # DASHBOARD BUILDER
 # ==========================================
 
 def build_dashboard(result):
 
     threat, risk, response = prepare_dashboard_data(result)
+
+
+    # ======================================
+    # THREAT INFORMATION
+    # KEEPING EXISTING INFORMATION
+    # ======================================
 
     threat_type = threat.get(
         "threat_type",
@@ -246,20 +340,41 @@ def build_dashboard(result):
         "Unknown"
     )
 
+
+    # ======================================
+    # KEEP INDICATORS EXACTLY AS BEFORE
+    # ======================================
+
     indicators = threat.get(
         "indicators_of_compromise",
         "No indicators identified"
     )
+
+
+    # ======================================
+    # KEEP EVIDENCE EXACTLY AS BEFORE
+    # ======================================
 
     evidence = threat.get(
         "evidence",
         "No evidence provided"
     )
 
+
+    # ======================================
+    # KEEP IMPACT EXACTLY AS BEFORE
+    # ======================================
+
     impact = threat.get(
         "possible_impact",
         "Unknown"
     )
+
+
+    # ======================================
+    # RESPONSE DATA
+    # SHORTENED
+    # ======================================
 
     immediate_actions = response.get(
         "immediate_defensive_actions",
@@ -271,79 +386,90 @@ def build_dashboard(result):
         "No investigation steps provided"
     )
 
-    recommendations = response.get(
-        "recommended_response",
-        "No recommendations provided"
-    )
-
     prevention = response.get(
         "prevention_recommendations",
         "No prevention recommendations provided"
     )
 
 
-    # Convert lists into attractive dashboard items
+    # ======================================
+    # INDICATORS
+    # EXISTING STYLE - UNCHANGED
+    # ======================================
 
     if isinstance(indicators, list):
+
         indicator_html = "".join(
             f'<span class="indicator">⚠️ {item}</span>'
             for item in indicators
         )
+
     else:
+
         indicator_html = (
             f'<span class="indicator">⚠️ {indicators}</span>'
         )
 
 
-    if isinstance(immediate_actions, list):
-        immediate_html = "".join(
-            f'<div class="action">🛡️ {item}</div>'
-            for item in immediate_actions
-        )
-    else:
-        immediate_html = (
-            f'<div class="action">🛡️ {immediate_actions}</div>'
-        )
+    # ======================================
+    # RECOMMENDED ACTIONS
+    # EXACTLY 4
+    # ======================================
+
+    action_items = get_short_items(
+        immediate_actions,
+        4
+    )
+
+    immediate_html = "".join(
+        f'<div class="action">🛡️ {item}</div>'
+        for item in action_items
+    )
 
 
-    if isinstance(investigation, list):
-        investigation_html = "".join(
-            f'<div class="action">🔍 {item}</div>'
-            for item in investigation
-        )
-    else:
-        investigation_html = (
-            f'<div class="action">🔍 {investigation}</div>'
-        )
+    # ======================================
+    # INVESTIGATION
+    # EXACTLY 3
+    # ======================================
+
+    investigation_items = get_short_items(
+        investigation,
+        3
+    )
+
+    investigation_html = "".join(
+        f'<div class="action">🔍 {item}</div>'
+        for item in investigation_items
+    )
 
 
-    if isinstance(recommendations, list):
-        recommendation_html = "".join(
-            f'<div class="action">🚀 {item}</div>'
-            for item in recommendations
-        )
-    else:
-        recommendation_html = (
-            f'<div class="action">🚀 {recommendations}</div>'
-        )
+    # ======================================
+    # PREVENTION
+    # EXACTLY 4
+    # ======================================
+
+    prevention_items = get_short_items(
+        prevention,
+        4
+    )
+
+    prevention_html = "".join(
+        f'<div class="action">🛡️ {item}</div>'
+        for item in prevention_items
+    )
 
 
-    if isinstance(prevention, list):
-        prevention_html = "".join(
-            f'<div class="action">🛡️ {item}</div>'
-            for item in prevention
-        )
-    else:
-        prevention_html = (
-            f'<div class="action">🛡️ {prevention}</div>'
-        )
-
+    # ======================================
+    # DASHBOARD
+    # ======================================
 
     return f"""
 
 <div class="dashboard">
 
-    <!-- HEADER -->
+    <!-- ==================================
+         HEADER
+         ================================== -->
 
     <div class="dashboard-header">
 
@@ -374,7 +500,9 @@ def build_dashboard(result):
     </div>
 
 
-    <!-- TOP CARDS -->
+    <!-- ==================================
+         TOP CARDS
+         ================================== -->
 
     <div class="top-grid">
 
@@ -431,7 +559,9 @@ def build_dashboard(result):
     </div>
 
 
-    <!-- INDICATORS -->
+    <!-- ==================================
+         INDICATORS
+         ================================== -->
 
     <div class="soc-card">
 
@@ -440,13 +570,17 @@ def build_dashboard(result):
         </div>
 
         <div class="indicators">
+
             {indicator_html}
+
         </div>
 
     </div>
 
 
-    <!-- EVIDENCE + IMPACT -->
+    <!-- ==================================
+         EVIDENCE + IMPACT
+         ================================== -->
 
     <div class="middle-grid">
 
@@ -482,7 +616,10 @@ def build_dashboard(result):
     </div>
 
 
-    <!-- IMMEDIATE ACTIONS -->
+    <!-- ==================================
+         RECOMMENDED ACTIONS
+         4 SHORT LINES
+         ================================== -->
 
     <div class="soc-card">
 
@@ -495,7 +632,10 @@ def build_dashboard(result):
     </div>
 
 
-    <!-- INVESTIGATION -->
+    <!-- ==================================
+         INVESTIGATION
+         3 SHORT LINES
+         ================================== -->
 
     <div class="soc-card">
 
@@ -508,20 +648,10 @@ def build_dashboard(result):
     </div>
 
 
-    <!-- RECOMMENDED RESPONSE -->
-
-    <div class="soc-card">
-
-        <div class="card-title">
-            🚀 RECOMMENDED RESPONSE
-        </div>
-
-        {recommendation_html}
-
-    </div>
-
-
-    <!-- PREVENTION -->
+    <!-- ==================================
+         PREVENTION
+         4 SHORT LINES
+         ================================== -->
 
     <div class="soc-card">
 
@@ -532,6 +662,7 @@ def build_dashboard(result):
         {prevention_html}
 
     </div>
+
 
 </div>
 
@@ -597,10 +728,9 @@ body {
 
     font-family: Arial, sans-serif;
 
-    padding: 10px;
+    padding: 8px;
 
     color: #eeeeF5;
-
 }
 
 
@@ -610,8 +740,7 @@ body {
 
 .dashboard-header {
 
-    padding: 10px 0 20px 0;
-
+    padding: 6px 0 14px 0;
 }
 
 
@@ -621,49 +750,44 @@ body {
 
     align-items: center;
 
-    gap: 14px;
+    gap: 12px;
 
-    font-size: 42px;
+    font-size: 36px;
 
     font-weight: 800;
 
     letter-spacing: 2px;
 
     color: #f5f5fa;
-
 }
 
 
 .brand:first-letter {
-
-    font-size: 45px;
-
+    font-size: 40px;
 }
 
 
 .subtitle {
 
-    margin-top: 10px;
+    margin-top: 7px;
 
-    font-size: 16px;
+    font-size: 14px;
 
     font-weight: 700;
 
     color: #ffffff;
 
     letter-spacing: 0.5px;
-
 }
 
 
 .status {
 
-    margin-top: 28px;
+    margin-top: 16px;
 
-    font-size: 14px;
+    font-size: 13px;
 
     color: #eeeeF5;
-
 }
 
 
@@ -671,27 +795,27 @@ body {
 
     display: inline-block;
 
-    width: 16px;
+    width: 12px;
 
-    height: 16px;
+    height: 12px;
 
     background: #35e88a;
 
     border-radius: 50%;
 
-    margin-right: 7px;
+    margin-right: 6px;
 
-    box-shadow: 0 0 12px rgba(53,232,138,0.7);
-
+    box-shadow:
+        0 0 10px
+        rgba(53,232,138,0.7);
 }
 
 
 .separator {
 
-    margin: 0 12px;
+    margin: 0 9px;
 
     color: #ffffff;
-
 }
 
 
@@ -706,12 +830,11 @@ body {
     grid-template-columns:
         repeat(3, 1fr);
 
-    gap: 16px;
+    gap: 12px;
 
-    margin-top: 18px;
+    margin-top: 12px;
 
-    margin-bottom: 16px;
-
+    margin-bottom: 12px;
 }
 
 
@@ -730,18 +853,17 @@ body {
 
     border: 1px solid #29294a;
 
-    border-radius: 18px;
+    border-radius: 16px;
 
-    padding: 22px;
+    padding: 17px;
 
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 
     box-shadow:
-        0 8px 30px
+        0 7px 25px
         rgba(0,0,0,0.35);
 
     transition: 0.2s;
-
 }
 
 
@@ -750,9 +872,8 @@ body {
     border-color: #6c5ce7;
 
     box-shadow:
-        0 0 22px
+        0 0 20px
         rgba(108,92,231,0.25);
-
 }
 
 
@@ -762,7 +883,7 @@ body {
 
 .card-title {
 
-    font-size: 13px;
+    font-size: 12px;
 
     font-weight: 700;
 
@@ -770,8 +891,7 @@ body {
 
     color: #aaaac5;
 
-    margin-bottom: 12px;
-
+    margin-bottom: 9px;
 }
 
 
@@ -781,47 +901,43 @@ body {
 
 .big-value {
 
-    font-size: 28px;
+    font-size: 26px;
 
     font-weight: 800;
 
     color: #ffffff;
-
 }
 
 
 .risk-value {
 
-    font-size: 30px;
+    font-size: 28px;
 
     font-weight: 800;
 
     color: #ff4d6d;
-
 }
 
 
 .score {
 
-    font-size: 20px;
+    font-size: 18px;
 
     font-weight: 700;
 
-    margin-top: 6px;
+    margin-top: 5px;
 
     color: #b8a7ff;
-
 }
 
 
 .confidence {
 
-    font-size: 28px;
+    font-size: 26px;
 
     font-weight: 800;
 
     color: #b8a7ff;
-
 }
 
 
@@ -829,10 +945,9 @@ body {
 
     color: #9696ad;
 
-    margin-top: 8px;
+    margin-top: 6px;
 
-    font-size: 14px;
-
+    font-size: 13px;
 }
 
 
@@ -846,8 +961,7 @@ body {
 
     flex-wrap: wrap;
 
-    gap: 8px;
-
+    gap: 7px;
 }
 
 
@@ -857,14 +971,13 @@ body {
 
     border: 1px solid #343452;
 
-    border-radius: 10px;
+    border-radius: 9px;
 
-    padding: 8px 12px;
+    padding: 7px 10px;
 
     color: #d8d8ea;
 
     font-size: 13px;
-
 }
 
 
@@ -879,8 +992,7 @@ body {
     grid-template-columns:
         2fr 1fr;
 
-    gap: 16px;
-
+    gap: 12px;
 }
 
 
@@ -892,10 +1004,9 @@ body {
 
     color: #eeeeF5;
 
-    font-size: 15px;
+    font-size: 14px;
 
-    line-height: 1.6;
-
+    line-height: 1.5;
 }
 
 
@@ -909,16 +1020,17 @@ body {
 
     border-left: 3px solid #6c5ce7;
 
-    border-radius: 8px;
+    border-radius: 7px;
 
-    padding: 10px 12px;
+    padding: 8px 10px;
 
-    margin-top: 8px;
+    margin-top: 6px;
 
     color: #eeeeF5;
 
-    font-size: 14px;
+    font-size: 13px;
 
+    line-height: 1.35;
 }
 
 
@@ -932,12 +1044,25 @@ body {
 
     border: 1px solid #ff4d6d;
 
-    border-radius: 14px;
+    border-radius: 12px;
 
-    padding: 20px;
+    padding: 18px;
 
     color: #ffffff;
+}
 
+
+/* ==========================================
+   INPUT AREA
+   ========================================== */
+
+textarea {
+
+    background: #0d0d1b !important;
+
+    border-color: #29294a !important;
+
+    color: #eeeeF5 !important;
 }
 
 
@@ -950,19 +1075,16 @@ body {
     .top-grid {
 
         grid-template-columns: 1fr;
-
     }
 
     .middle-grid {
 
         grid-template-columns: 1fr;
-
     }
 
     .brand {
 
-        font-size: 32px;
-
+        font-size: 30px;
     }
 
 }
@@ -973,10 +1095,14 @@ body {
 # ==========================================
 # GRADIO APP
 # ==========================================
+# IMPORTANT:
+# CSS is NOT passed here.
+# It is passed only to app.launch()
+# to avoid the Gradio 6.0 warning.
+# ==========================================
 
 with gr.Blocks(
-    title="SentinelSOC AI",
-    css=dashboard_css
+    title="SentinelSOC AI"
 ) as app:
 
 
@@ -1013,10 +1139,9 @@ with gr.Blocks(
             "security alert, or log here..."
         ),
 
-        lines=7,
+        lines=5,
 
         show_label=False
-
     )
 
 
@@ -1029,7 +1154,6 @@ with gr.Blocks(
         "🔍 ANALYZE THREAT",
 
         variant="primary"
-
     )
 
 
@@ -1047,7 +1171,6 @@ with gr.Blocks(
         inputs=alert_input,
 
         outputs=output
-
     )
 
 
@@ -1068,7 +1191,7 @@ if __name__ == "__main__":
 
         server_name="0.0.0.0",
 
-        server_port=port
+        server_port=port,
 
+        css=dashboard_css
     )
-
