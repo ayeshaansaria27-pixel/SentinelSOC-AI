@@ -53,6 +53,5 @@ SentinelSOC AI is designed for defensive cybersecurity analysis and educational 
 This project demonstrates the application of AI agents and Generative AI in cybersecurity operations, focusing on threat analysis, risk assessment, and defensive response
 
 ## 🌐 Live Demo
-
 sentinelsoc-ai-production-bd29.up.railway.app
-This project demonstrates the application of **AI agents and Generative AI in cybersecurity operations**, focusing on threat analysis, risk assessment, and defensive response.
+
